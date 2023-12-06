@@ -28,10 +28,10 @@ int main(int argc, char** argv)
 
   while (ros::ok())
   {
-    //接收图像并显示
+    // Receive image and display
     transdata.Transdata_Recdata();
 
-    //需要使用互斥锁 因为要操作图像数据
+    // You need to use a mutex lock because you need to operate image data
     mImage_buf.lock();
     if (!transdata.image_test.empty())
     {

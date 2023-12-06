@@ -56,7 +56,7 @@ int Transdata::Transdata_Recdata()
         return -1;
       }
 
-      // AVframe to rgb  这一步要操作image_test，所以锁住
+      // AVframe to rgb This step requires operating image_test, so lock it
       mImage_buf.lock();
       AVFrame2Img(pframe, image_test);
       mImage_buf.unlock();
@@ -170,37 +170,37 @@ void Transdata::AVFrame2Img(AVFrame* pFrame, cv::Mat& img)
   int frameHeight = pFrame->height;
   int frameWidth = pFrame->width;
   int channels = 3;
-  //输出图像分配内存
+  // Output image allocation memory
   img = cv::Mat::zeros(frameHeight, frameWidth, CV_8UC3);
   Mat output = cv::Mat::zeros(frameHeight, frameWidth, CV_8U);
 
-  //创建保存yuv数据的buffer
+  // Create a buffer to save yuv data
   uchar* pDecodedBuffer = (uchar*)malloc(frameHeight * frameWidth * sizeof(uchar) * channels);
 
-  //从AVFrame中获取yuv420p数据，并保存到buffer
+  // Get yuv420p data from AVFrame and save it to buffer
   int i, j, k;
-  //拷贝y分量
+  // copy y component
   for (i = 0; i < frameHeight; i++)
   {
     memcpy(pDecodedBuffer + frameWidth * i, pFrame->data[0] + pFrame->linesize[0] * i, frameWidth);
   }
-  //拷贝u分量
+  // Copy u component
   for (j = 0; j < frameHeight / 2; j++)
   {
     memcpy(pDecodedBuffer + frameWidth * i + frameWidth / 2 * j, pFrame->data[1] + pFrame->linesize[1] * j,
            frameWidth / 2);
   }
-  //拷贝v分量
+  // Copy v component
   for (k = 0; k < frameHeight / 2; k++)
   {
     memcpy(pDecodedBuffer + frameWidth * i + frameWidth / 2 * j + frameWidth / 2 * k,
            pFrame->data[2] + pFrame->linesize[2] * k, frameWidth / 2);
   }
 
-  //将buffer中的yuv420p数据转换为RGB;
+  // Convert the yuv420p data in the buffer to RGB;
   Yuv420p2Rgb32(pDecodedBuffer, img.data, frameWidth, frameHeight);
 
-  //简单处理，这里用了canny来进行二值化
+  // Simple processing, canny is used here for binarization
   //    cvtColor(img, output, CV_RGB2GRAY);
   //    waitKey(2);
   //    Canny(img, output, 50, 50*2);
@@ -208,9 +208,9 @@ void Transdata::AVFrame2Img(AVFrame* pFrame, cv::Mat& img)
   namedWindow("test", WINDOW_NORMAL);
   imshow("test", img);
   waitKey(1);
-  // 测试函数
+  // test function
   // imwrite("test.jpg",img);
-  //释放buffer
+  // Release buffer
   free(pDecodedBuffer);
   // img.release();
   output.release();

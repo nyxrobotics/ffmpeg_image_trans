@@ -37,8 +37,8 @@ public:
   const AVBitStreamFilter* buffersrc = NULL;
   AVBSFContext* bsf_ctx;
   AVCodecParameters* codecpar = NULL;
-  // const char *in_filename  = "rtmp://localhost:1935/rtmplive";   //芒果台rtmp地址
-  // const char *in_filename  = "rtmp://58.200.131.2:1935/livetv/hunantv";   //芒果台rtmp地址
+  // const char *in_filename  = "rtmp://localhost:1935/rtmplive";   // Mango channel rtmp address
+  // const char *in_filename  = "rtmp://58.200.131.2:1935/livetv/hunantv";   // Mango channel rtmp address
   const char* in_filename = "rtmp://183.62.75.39:6030/livertmp/test";
   const char* out_filename_v = "test1.h264";  // Output file URL
 
