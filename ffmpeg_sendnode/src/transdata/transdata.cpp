@@ -3,6 +3,7 @@
 Transdata::Transdata()
 {
 }
+
 Transdata::~Transdata()
 {
 }
@@ -144,13 +145,13 @@ void Transdata::yuv420p2Rgb32(const uchar* yuvBuffer_in, const uchar* rgbBuffer_
       int index_u = width * height + y / 2 * width / 2 + x / 2;
       int index_v = width * height + width * height / 4 + y / 2 * width / 2 + x / 2;
 
-      uchar y = yuv_buffer[index_y];
-      uchar u = yuv_buffer[index_u];
-      uchar v = yuv_buffer[index_v];
+      uchar y_val = yuv_buffer[index_y];
+      uchar u_val = yuv_buffer[index_u];
+      uchar v_val = yuv_buffer[index_v];
 
-      int r = y + 1.402 * (v - 128);
-      int g = y - 0.34413 * (u - 128) - 0.71414 * (v - 128);
-      int b = y + 1.772 * (u - 128);
+      int r = y_val + 1.402 * (v_val - 128);
+      int g = y_val - 0.34413 * (u_val - 128) - 0.71414 * (v_val - 128);
+      int b = y_val + 1.772 * (u_val - 128);
       r = (r < 0) ? 0 : r;
       g = (g < 0) ? 0 : g;
       b = (b < 0) ? 0 : b;
@@ -158,9 +159,9 @@ void Transdata::yuv420p2Rgb32(const uchar* yuvBuffer_in, const uchar* rgbBuffer_
       g = (g > 255) ? 255 : g;
       b = (b > 255) ? 255 : b;
 
-      rgb32_buffer[(y * width + x) * channels + 2] = uchar(r);
-      rgb32_buffer[(y * width + x) * channels + 1] = uchar(g);
-      rgb32_buffer[(y * width + x) * channels + 0] = uchar(b);
+      rgb32_buffer[(y * width + x) * channels + 2] = static_cast<uchar>(r);
+      rgb32_buffer[(y * width + x) * channels + 1] = static_cast<uchar>(g);
+      rgb32_buffer[(y * width + x) * channels + 0] = static_cast<uchar>(b);
     }
   }
 }
@@ -169,13 +170,12 @@ void Transdata::avFrame2Img(AVFrame* pFrame, cv::Mat& img)
 {
   int frame_height = pFrame->height;
   int frame_width = pFrame->width;
-  int channels = 3;
+
   // Output image allocation memory
   img = cv::Mat::zeros(frame_height, frame_width, CV_8UC3);
-  Mat output = cv::Mat::zeros(frame_height, frame_width, CV_8U);
 
   // Create a buffer to save yuv data
-  uchar* p_decoded_buffer = (uchar*)malloc(frame_height * frame_width * sizeof(uchar) * channels);
+  uchar* p_decoded_buffer = (uchar*)malloc(frame_height * frame_width * sizeof(uchar) * 3);
 
   // Get yuv420p data from AVFrame and save it to buffer
   int i, j, k;
@@ -200,18 +200,6 @@ void Transdata::avFrame2Img(AVFrame* pFrame, cv::Mat& img)
   // Convert the yuv420p data in the buffer to RGB;
   yuv420p2Rgb32(p_decoded_buffer, img.data, frame_width, frame_height);
 
-  // Simple processing, canny is used here for binarization
-  //    cvtColor(img, output, CV_RGB2GRAY);
-  //    waitKey(2);
-  //    Canny(img, output, 50, 50*2);
-  //    waitKey(2);
-  namedWindow("test", WINDOW_NORMAL);
-  imshow("test", img);
-  waitKey(1);
-  // test function
-  // imwrite("test.jpg",img);
   // Release buffer
   free(p_decoded_buffer);
-  // img.release();
-  output.release();
 }
