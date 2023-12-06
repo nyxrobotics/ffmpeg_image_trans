@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package format="2">
+  <name>ffmpeg_image_trans</name>
+  <version>0.0.0</version>
+  <description>This demo can help you receive rtmp stream,and transmit images through ROS</description>
+  <maintainer email="SBGRP-git@g.softbank.co.jp">SoftBank corp.</maintainer>
+  <license>Apache 2.0</license>
+  <url type="repository">https://github.com/sbgisen/ffmpeg_image_trans</url>
+  <url type="bugtracker">https://github.com/sbgisen/ffmpeg_image_trans/issues</url>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>ffmpeg_recnode</exec_depend>
+  <exec_depend>ffmpeg_sendnode</exec_depend>
+  <export>
+    <metapackage/>
+  </export>
+</package>

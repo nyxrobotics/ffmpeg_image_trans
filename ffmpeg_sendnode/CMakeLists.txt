@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sendnode)
-
+project(ffmpeg_sendnode)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

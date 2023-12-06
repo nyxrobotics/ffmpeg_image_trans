@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>recnode</name>
+  <name>ffmpeg_recnode</name>
   <version>0.0.0</version>
   <description>The recnode package</description>
 
