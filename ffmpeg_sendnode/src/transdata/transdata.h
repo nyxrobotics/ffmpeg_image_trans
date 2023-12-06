@@ -26,7 +26,7 @@ public:
   ~Transdata();
 
   void avFrame2Img(AVFrame* pFrame, cv::Mat& img);
-  void yuv420p2Rgb32(const uchar* yuvBuffer_in, const uchar* rgbBuffer_out, int width, int height);
+  void yuv420p2Rgb32(const uchar* yuvBuffer_in, uchar* rgbBuffer_out, int width, int height);
   AVFormatContext* ifmt_ctx_ = nullptr;
   AVPacket pkt_;
   AVFrame* pframe_ = nullptr;
