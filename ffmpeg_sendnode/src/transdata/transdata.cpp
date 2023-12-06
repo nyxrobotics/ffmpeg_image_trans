@@ -7,11 +7,11 @@ Transdata::~Transdata()
 {
 }
 
-int Transdata::Transdata_free()
+int Transdata::transdataFree()
 {
-  av_bsf_free(&bsf_ctx);
-  avformat_close_input(&ifmt_ctx);
-  if (ret < 0 && ret != AVERROR_EOF)
+  av_bsf_free(&bsf_ctx_);
+  avformat_close_input(&ifmt_ctx_);
+  if (ret_ < 0 && ret_ != AVERROR_EOF)
   {
     printf("Error occurred.\n");
     return -1;
@@ -19,118 +19,118 @@ int Transdata::Transdata_free()
   return 0;
 }
 
-int Transdata::Transdata_Recdata()
+int Transdata::transdataRecdata()
 {
-  if (av_read_frame(ifmt_ctx, &pkt) < 0)
+  if (av_read_frame(ifmt_ctx_, &pkt_) < 0)
   {
     return -1;
   }
-  if (pkt.stream_index == videoindex)
+  if (pkt_.stream_index == videoindex_)
   {
     // H.264 Filter
-    if (av_bsf_send_packet(bsf_ctx, &pkt) < 0)
+    if (av_bsf_send_packet(bsf_ctx_, &pkt_) < 0)
     {
       cout << " bsg_send_packet is error! " << endl;
       return -1;
     }
-    if (av_bsf_receive_packet(bsf_ctx, &pkt) < 0)
+    if (av_bsf_receive_packet(bsf_ctx_, &pkt_) < 0)
     {
       cout << " bsg_receive_packet is error! " << endl;
       return -1;
     }
-    printf("Write Video Packet. size:%d\tpts:%ld\n", pkt.size, pkt.pts);
+    printf("Write Video Packet. size:%d\tpts:%ld\n", pkt_.size, pkt_.pts);
     // Decode AVPacket
-    if (pkt.size)
+    if (pkt_.size)
     {
-      ret = avcodec_send_packet(pCodecCtx, &pkt);
-      if (ret < 0 || ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+      ret_ = avcodec_send_packet(pCodecCtx_, &pkt_);
+      if (ret_ < 0 || ret_ == AVERROR(EAGAIN) || ret_ == AVERROR_EOF)
       {
-        std::cout << "avcodec_send_packet: " << ret << std::endl;
+        std::cout << "avcodec_send_packet: " << ret_ << std::endl;
         return -1;
       }
       // Get AVframe
-      ret = avcodec_receive_frame(pCodecCtx, pframe);
-      if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+      ret_ = avcodec_receive_frame(pCodecCtx_, pframe_);
+      if (ret_ == AVERROR(EAGAIN) || ret_ == AVERROR_EOF)
       {
-        std::cout << "avcodec_receive_frame: " << ret << std::endl;
+        std::cout << "avcodec_receive_frame: " << ret_ << std::endl;
         return -1;
       }
 
       // AVframe to rgb This step requires operating image_test, so lock it
-      mImage_buf.lock();
-      AVFrame2Img(pframe, image_test);
-      mImage_buf.unlock();
+      mImage_buf_.lock();
+      avFrame2Img(pframe_, image_test_);
+      mImage_buf_.unlock();
     }
   }
   // Free AvPacket
-  av_packet_unref(&pkt);
+  av_packet_unref(&pkt_);
   return 0;
 }
 
-int Transdata::Transdata_init()
+int Transdata::transdataInit()
 {
   // Register
   av_register_all();
   // Network
   avformat_network_init();
   // Input
-  if ((ret = avformat_open_input(&ifmt_ctx, in_filename, 0, 0)) < 0)
+  if ((ret_ = avformat_open_input(&ifmt_ctx_, in_filename_, nullptr, nullptr)) < 0)
   {
     printf("Could not open input file.");
     return -1;
   }
-  if ((ret = avformat_find_stream_info(ifmt_ctx, 0)) < 0)
+  if ((ret_ = avformat_find_stream_info(ifmt_ctx_, nullptr)) < 0)
   {
     printf("Failed to retrieve input stream information");
     return -1;
   }
-  videoindex = -1;
-  for (i = 0; i < ifmt_ctx->nb_streams; i++)
+  videoindex_ = -1;
+  for (int i = 0; i < ifmt_ctx_->nb_streams; i++)
   {
-    if (ifmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+    if (ifmt_ctx_->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
     {
-      videoindex = i;
-      codecpar = ifmt_ctx->streams[i]->codecpar;
+      videoindex_ = i;
+      codecpar_ = ifmt_ctx_->streams[i]->codecpar;
     }
   }
   // Find H.264 Decoder
-  pCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
-  if (pCodec == NULL)
+  pCodec_ = avcodec_find_decoder(AV_CODEC_ID_H264);
+  if (pCodec_ == nullptr)
   {
     printf("Couldn't find Codec.\n");
     return -1;
   }
-  pCodecCtx = avcodec_alloc_context3(pCodec);
-  if (!pCodecCtx)
+  pCodecCtx_ = avcodec_alloc_context3(pCodec_);
+  if (!pCodecCtx_)
   {
     fprintf(stderr, "Could not allocate video codec context\n");
     exit(1);
   }
-  if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0)
+  if (avcodec_open2(pCodecCtx_, pCodec_, nullptr) < 0)
   {
     printf("Couldn't open codec.\n");
     return -1;
   }
-  pframe = av_frame_alloc();
-  if (!pframe)
+  pframe_ = av_frame_alloc();
+  if (!pframe_)
   {
     printf("Could not allocate video frame\n");
     exit(1);
   }
-  buffersrc = av_bsf_get_by_name("h264_mp4toannexb");
+  buffersrc_ = av_bsf_get_by_name("h264_mp4toannexb");
 
-  if (av_bsf_alloc(buffersrc, &bsf_ctx) < 0)
+  if (av_bsf_alloc(buffersrc_, &bsf_ctx_) < 0)
     return -1;
-  if (avcodec_parameters_copy(bsf_ctx->par_in, codecpar) < 0)
+  if (avcodec_parameters_copy(bsf_ctx_->par_in, codecpar_) < 0)
     return -1;
-  if (av_bsf_init(bsf_ctx) < 0)
+  if (av_bsf_init(bsf_ctx_) < 0)
     return -1;
 }
 
-void Transdata::Yuv420p2Rgb32(const uchar* yuvBuffer_in, const uchar* rgbBuffer_out, int width, int height)
+void Transdata::yuv420p2Rgb32(const uchar* yuvBuffer_in, const uchar* rgbBuffer_out, int width, int height)
 {
-  uchar* yuvBuffer = (uchar*)yuvBuffer_in;
-  uchar* rgb32Buffer = (uchar*)rgbBuffer_out;
+  uchar* yuv_buffer = (uchar*)yuvBuffer_in;
+  uchar* rgb32_buffer = (uchar*)rgbBuffer_out;
 
   int channels = 3;
 
@@ -140,65 +140,65 @@ void Transdata::Yuv420p2Rgb32(const uchar* yuvBuffer_in, const uchar* rgbBuffer_
     {
       int index = y * width + x;
 
-      int indexY = y * width + x;
-      int indexU = width * height + y / 2 * width / 2 + x / 2;
-      int indexV = width * height + width * height / 4 + y / 2 * width / 2 + x / 2;
+      int index_y = y * width + x;
+      int index_u = width * height + y / 2 * width / 2 + x / 2;
+      int index_v = width * height + width * height / 4 + y / 2 * width / 2 + x / 2;
 
-      uchar Y = yuvBuffer[indexY];
-      uchar U = yuvBuffer[indexU];
-      uchar V = yuvBuffer[indexV];
+      uchar y = yuv_buffer[index_y];
+      uchar u = yuv_buffer[index_u];
+      uchar v = yuv_buffer[index_v];
 
-      int R = Y + 1.402 * (V - 128);
-      int G = Y - 0.34413 * (U - 128) - 0.71414 * (V - 128);
-      int B = Y + 1.772 * (U - 128);
-      R = (R < 0) ? 0 : R;
-      G = (G < 0) ? 0 : G;
-      B = (B < 0) ? 0 : B;
-      R = (R > 255) ? 255 : R;
-      G = (G > 255) ? 255 : G;
-      B = (B > 255) ? 255 : B;
+      int r = y + 1.402 * (v - 128);
+      int g = y - 0.34413 * (u - 128) - 0.71414 * (v - 128);
+      int b = y + 1.772 * (u - 128);
+      r = (r < 0) ? 0 : r;
+      g = (g < 0) ? 0 : g;
+      b = (b < 0) ? 0 : b;
+      r = (r > 255) ? 255 : r;
+      g = (g > 255) ? 255 : g;
+      b = (b > 255) ? 255 : b;
 
-      rgb32Buffer[(y * width + x) * channels + 2] = uchar(R);
-      rgb32Buffer[(y * width + x) * channels + 1] = uchar(G);
-      rgb32Buffer[(y * width + x) * channels + 0] = uchar(B);
+      rgb32_buffer[(y * width + x) * channels + 2] = uchar(r);
+      rgb32_buffer[(y * width + x) * channels + 1] = uchar(g);
+      rgb32_buffer[(y * width + x) * channels + 0] = uchar(b);
     }
   }
 }
 
-void Transdata::AVFrame2Img(AVFrame* pFrame, cv::Mat& img)
+void Transdata::avFrame2Img(AVFrame* pFrame, cv::Mat& img)
 {
-  int frameHeight = pFrame->height;
-  int frameWidth = pFrame->width;
+  int frame_height = pFrame->height;
+  int frame_width = pFrame->width;
   int channels = 3;
   // Output image allocation memory
-  img = cv::Mat::zeros(frameHeight, frameWidth, CV_8UC3);
-  Mat output = cv::Mat::zeros(frameHeight, frameWidth, CV_8U);
+  img = cv::Mat::zeros(frame_height, frame_width, CV_8UC3);
+  Mat output = cv::Mat::zeros(frame_height, frame_width, CV_8U);
 
   // Create a buffer to save yuv data
-  uchar* pDecodedBuffer = (uchar*)malloc(frameHeight * frameWidth * sizeof(uchar) * channels);
+  uchar* p_decoded_buffer = (uchar*)malloc(frame_height * frame_width * sizeof(uchar) * channels);
 
   // Get yuv420p data from AVFrame and save it to buffer
   int i, j, k;
   // copy y component
-  for (i = 0; i < frameHeight; i++)
+  for (i = 0; i < frame_height; i++)
   {
-    memcpy(pDecodedBuffer + frameWidth * i, pFrame->data[0] + pFrame->linesize[0] * i, frameWidth);
+    memcpy(p_decoded_buffer + frame_width * i, pFrame->data[0] + pFrame->linesize[0] * i, frame_width);
   }
   // Copy u component
-  for (j = 0; j < frameHeight / 2; j++)
+  for (j = 0; j < frame_height / 2; j++)
   {
-    memcpy(pDecodedBuffer + frameWidth * i + frameWidth / 2 * j, pFrame->data[1] + pFrame->linesize[1] * j,
-           frameWidth / 2);
+    memcpy(p_decoded_buffer + frame_width * i + frame_width / 2 * j, pFrame->data[1] + pFrame->linesize[1] * j,
+           frame_width / 2);
   }
   // Copy v component
-  for (k = 0; k < frameHeight / 2; k++)
+  for (k = 0; k < frame_height / 2; k++)
   {
-    memcpy(pDecodedBuffer + frameWidth * i + frameWidth / 2 * j + frameWidth / 2 * k,
-           pFrame->data[2] + pFrame->linesize[2] * k, frameWidth / 2);
+    memcpy(p_decoded_buffer + frame_width * i + frame_width / 2 * j + frame_width / 2 * k,
+           pFrame->data[2] + pFrame->linesize[2] * k, frame_width / 2);
   }
 
   // Convert the yuv420p data in the buffer to RGB;
-  Yuv420p2Rgb32(pDecodedBuffer, img.data, frameWidth, frameHeight);
+  yuv420p2Rgb32(p_decoded_buffer, img.data, frame_width, frame_height);
 
   // Simple processing, canny is used here for binarization
   //    cvtColor(img, output, CV_RGB2GRAY);
@@ -211,7 +211,7 @@ void Transdata::AVFrame2Img(AVFrame* pFrame, cv::Mat& img)
   // test function
   // imwrite("test.jpg",img);
   // Release buffer
-  free(pDecodedBuffer);
+  free(p_decoded_buffer);
   // img.release();
   output.release();
 }

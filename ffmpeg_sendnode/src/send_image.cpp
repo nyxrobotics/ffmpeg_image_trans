@@ -5,8 +5,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 
-Transdata transdata;
-std::mutex mImage_buf;
+Transdata g_TRANSDATA;
+std::mutex g_M_IMAGE_BUF;
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "talker");
@@ -20,7 +20,7 @@ int main(int argc, char** argv)
   int count = 0;
   sensor_msgs::ImagePtr msg;
 
-  if (transdata.Transdata_init() < 0)
+  if (g_TRANSDATA.transdataInit() < 0)
   {
     cout << "init error !" << endl;
     return -1;
@@ -29,21 +29,21 @@ int main(int argc, char** argv)
   while (ros::ok())
   {
     // Receive image and display
-    transdata.Transdata_Recdata();
+    g_TRANSDATA.transdataRecdata();
 
     // You need to use a mutex lock because you need to operate image data
-    mImage_buf.lock();
-    if (!transdata.image_test.empty())
+    g_M_IMAGE_BUF.lock();
+    if (!g_TRANSDATA.image_test_.empty())
     {
       //            imshow("test",transdata.image_test);
       //            waitKey(10);
-      msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", transdata.image_test).toImageMsg();
+      msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", g_TRANSDATA.image_test_).toImageMsg();
       pub.publish(msg);
       cout << " send image " << count << endl;
       count++;
-      transdata.image_test.release();
+      g_TRANSDATA.image_test_.release();
     }
-    mImage_buf.unlock();
+    g_M_IMAGE_BUF.unlock();
 
     ros::spinOnce();
   }
