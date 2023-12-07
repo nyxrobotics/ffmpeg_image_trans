@@ -40,7 +40,7 @@ public:
   // const char *in_filename  = "rtmp://localhost:1935/rtmplive";   // Mango channel rtmp address
   // const char *in_filename  = "rtmp://58.200.131.2:1935/livetv/hunantv";   // Mango channel rtmp address
   const char* in_filename_ = "rtmp://183.62.75.39:6030/livertmp/test";
-  const char* out_filename_v_ = "test1.h264";  // Output file URL
+
 
   cv::Mat image_test_;
   mutex mImage_buf_;

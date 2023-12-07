@@ -39,7 +39,7 @@ int main(int argc, char** argv)
       //            waitKey(10);
       msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", g_TRANSDATA.image_test_).toImageMsg();
       pub.publish(msg);
-      cout << " send image " << count << endl;
+      // cout << " send image " << count << endl;
       count++;
       g_TRANSDATA.image_test_.release();
     }

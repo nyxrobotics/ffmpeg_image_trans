@@ -46,7 +46,7 @@ int Transdata::transdataRecdata()
       return -1;
     }
 
-    printf("Write Video Packet. size:%d\tpts:%ld\n", pkt_.size, pkt_.pts);
+    // printf("Write Video Packet. size:%d\tpts:%ld\n", pkt_.size, pkt_.pts);
 
     // Decode AVPacket
     if (pkt_.size)
@@ -75,10 +75,21 @@ int Transdata::transdataInit()
   // Network
   avformat_network_init();
 
+  // Set options
+  AVDictionary* options = nullptr;
+  av_dict_set(&options, "probesize", "32", 0);               // probesize 32
+  av_dict_set(&options, "flags", "low_delay", 0);            // flags low_delay
+  av_dict_set(&options, "rtsp_transport", "tcp", 0);         // or "udp" based on preference
+  av_dict_set(&options, "rtsp_flags", "prefer_tcp", 0);      // Try TCP for RTP transport first
+  av_dict_set(&options, "tcp_nodelay", "1", 0);              // Set TCP_NODELAY to disable Nagle’s algorithm
+  av_dict_set(&options, "max_delay", "0", 0);                // the maximum demuxing delay [us]
+  av_dict_set(&options, "allowed_media_types", "video", 0);  // Only accept video
+
   // Input
-  if ((ret_ = avformat_open_input(&ifmt_ctx_, in_filename_, nullptr, nullptr)) < 0)
+  if ((ret_ = avformat_open_input(&ifmt_ctx_, in_filename_, nullptr, &options)) < 0)
   {
     printf("Could not open input file.");
+    av_dict_free(&options);
     return -1;
   }
 
