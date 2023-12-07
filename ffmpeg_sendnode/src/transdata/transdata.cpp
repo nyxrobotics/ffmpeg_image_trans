@@ -19,6 +19,7 @@ Transdata::~Transdata()
 int Transdata::transdataFree()
 {
   av_bsf_free(&bsf_ctx_);
+  av_frame_free(&pframe_);
   avformat_close_input(&ifmt_ctx_);
 
   if (ret_ < 0 && ret_ != AVERROR_EOF)
@@ -92,6 +93,7 @@ int Transdata::transdataInit()
     av_dict_free(&options);
     return -1;
   }
+  av_dict_free(&options);
 
   if ((ret_ = avformat_find_stream_info(ifmt_ctx_, nullptr)) < 0)
   {
@@ -192,7 +194,7 @@ void Transdata::avFrame2Img(AVFrame* pFrame, cv::Mat& img)
   img = cv::Mat::zeros(frame_height, frame_width, CV_8UC3);
 
   // Create a buffer to save yuv data
-  uchar* p_decoded_buffer = (uchar*)malloc(frame_height * frame_width * sizeof(uchar) * 3);
+  uchar* p_decoded_buffer = static_cast<uchar*>(malloc(frame_height * frame_width * sizeof(uchar) * 3));
 
   // Get yuv420p data from AVFrame and save it to buffer
   int i, j, k;
