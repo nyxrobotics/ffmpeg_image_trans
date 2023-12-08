@@ -24,9 +24,21 @@ class Transdata
 public:
   Transdata();
   ~Transdata();
+  void setUrl(const std::string url);
+  void setUsername(const std::string username);
+  void setPassword(const std::string password);
+  cv::Mat image_out_;
+  int transdataInit();
+  int transdataRecdata();
+  int transdataFree();
 
+private:
+  std::string getFilename();
   void avFrame2Img(AVFrame* pFrame, cv::Mat& img);
   void yuv420p2Rgb32(const uchar* yuvBuffer_in, uchar* rgbBuffer_out, int width, int height);
+  std::string in_url_;
+  std::string in_username_;
+  std::string in_password_;
   AVFormatContext* ifmt_ctx_ = nullptr;
   AVPacket pkt_;
   AVFrame* pframe_ = nullptr;
@@ -37,16 +49,7 @@ public:
   const AVBitStreamFilter* buffersrc_ = nullptr;
   AVBSFContext* bsf_ctx_;
   AVCodecParameters* codecpar_ = nullptr;
-  // const char *in_filename  = "rtmp://localhost:1935/rtmplive";   // Mango channel rtmp address
-  // const char *in_filename  = "rtmp://58.200.131.2:1935/livetv/hunantv";   // Mango channel rtmp address
-  const char* in_filename_ = "rtmp://183.62.75.39:6030/livertmp/test";
-
-
-  cv::Mat image_test_;
   mutex mImage_buf_;
-  int transdataInit();
-  int transdataRecdata();
-  int transdataFree();
 };
 
 #endif  // VERSION1_0_TRANSDATA_H

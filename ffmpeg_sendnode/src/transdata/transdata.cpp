@@ -8,12 +8,41 @@ Transdata::Transdata()
   , bsf_ctx_(nullptr)
   , videoindex_(-1)
   , ret_(0)
+  , in_url_("")
+  , in_username_("")
+  , in_password_("")
 {
 }
 
 Transdata::~Transdata()
 {
   transdataFree();
+}
+
+void Transdata::setUrl(const std::string url)
+{
+  in_url_ = url;
+}
+
+void Transdata::setUsername(const std::string username)
+{
+  in_username_ = username;
+}
+
+void Transdata::setPassword(const std::string password)
+{
+  in_password_ = password;
+}
+
+std::string Transdata::getFilename()
+{
+  std::string rtsp_filename = "";
+  // Find the position of "://"
+  size_t protocol_pos = in_url_.find("://");
+  std::string protocol = in_url_.substr(0, protocol_pos + 3);
+  std::string url = in_url_.substr(protocol_pos + 3);  // Skip "://"
+  rtsp_filename = protocol + in_username_ + ":" + in_password_ + "@" + url;
+  return rtsp_filename;
 }
 
 int Transdata::transdataFree()
@@ -61,7 +90,7 @@ int Transdata::transdataRecdata()
 
       // AVframe to rgb This step requires operating image_test, so lock it
       mImage_buf_.lock();
-      avFrame2Img(pframe_, image_test_);
+      avFrame2Img(pframe_, image_out_);
       mImage_buf_.unlock();
     }
   }
@@ -73,6 +102,9 @@ int Transdata::transdataRecdata()
 
 int Transdata::transdataInit()
 {
+  // Get rtsp url
+  std::string rtsp_filename = getFilename();
+
   // Network
   avformat_network_init();
 
@@ -87,7 +119,7 @@ int Transdata::transdataInit()
   av_dict_set(&options, "allowed_media_types", "video", 0);  // Only accept video
 
   // Input
-  if ((ret_ = avformat_open_input(&ifmt_ctx_, in_filename_, nullptr, &options)) < 0)
+  if ((ret_ = avformat_open_input(&ifmt_ctx_, rtsp_filename.c_str(), nullptr, &options)) < 0)
   {
     printf("Could not open input file.");
     av_dict_free(&options);
